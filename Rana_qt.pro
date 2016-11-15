@@ -20,6 +20,8 @@ SOURCES += main.cpp\
     output.cpp \
     control.cpp \
     graphics/agentItem.cpp \
+    graphics/sphereitem.cpp \
+    graphics/glwidget.cpp \
     runner.cpp \
     postprocessing/eventprocessing.cpp \
     postprocessing/eventmap.cpp \
@@ -49,6 +51,8 @@ HEADERS  += mainwindow.h \
     output.h \
     control.h \
     graphics/agentItem.h \
+    graphics/sphereitem.h \
+    graphics/glwidget.h \
     runner.h \
     postprocessing/eventprocessing.h \
     postprocessing/eventmap.h \
@@ -109,8 +113,14 @@ macx: PRE_TARGETDEPS += $$PWD/../lua-5.2_MacOS107_lib/liblua52.a
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../lua51_64bit/ -llua5.1
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../lua51_64bit/ -llua5.1
 
-INCLUDEPATH += $$PWD/../lua51_64bit/include
+INCLUDEPATH += $$PWD/../lua51_64bit/include \
+                graphics
+
 DEPENDPATH += $$PWD/../lua51_64bit/include
 
 RESOURCES += \
     images.qrc
+
+LIBS += -lGLEW \
+        -lGLU \
+        -lglut \

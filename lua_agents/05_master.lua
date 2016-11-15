@@ -58,8 +58,8 @@ function initializeAgent()
 		Agent.addAgent("05_pole.lua",i*20, ENV_HEIGHT-50)
 	end
 
-	PositionX = -1
-	PositionY = -1
+	PositionX = ENV_WIDTH/2
+	PositionY = ENV_HEIGHT/2
 
 	Agent.addAgent("05_bat.lua")
 

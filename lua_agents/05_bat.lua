@@ -70,17 +70,19 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
 
 	Displacement = above_count/below_count
 
+	--l_debug("Echo back!")
+
 end
 
 function takeStep()
 
 
 	if l_getMersenneInteger(1,2000) <= 1 then
-	 	Event.emit{speed=343}
+	 	Event.emit{speed=0,description="beep"}
 	end
 
 	--movement
-	PositionX = PositionX + speed * STEP_RESOLUTION
+	PositionX = PositionX + 10--speed * STEP_RESOLUTION
 
 	if Displacement > 1 and PositionY > 70 then
 		PositionY = PositionY - speed/2 * STEP_RESOLUTION
@@ -98,8 +100,8 @@ function cleanUp()
 	l_debug("Agent #: " .. ID .. " is done\n")
 end
 
-function processEventFunction(sourceX, sourceY, posX, posY, time, eventTable)
+--function processEventFunction(sourceX, sourceY, posX, posY, time, eventTable)
 
-	return 2
+--	return 2
 
-end
+--end

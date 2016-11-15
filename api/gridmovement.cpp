@@ -55,7 +55,7 @@ double GridMovement::getScale()
     return scale;
 }
 
-void GridMovement::addPos(int x, int y, int id)
+void GridMovement::addPos(int x, int y, int z, int id)
 {
 
     std::lock_guard<std::shared_timed_mutex> writerLock(gridMutex);
@@ -111,7 +111,7 @@ void GridMovement::removePos(int id)
 
 }
 
-void GridMovement::updatePos(int oldX, int oldY, int newX, int newY, int id)
+void GridMovement::updatePos(int oldX, int oldY, int oldZ, int newX, int newY, int newZ, int id)
 {          
     std::lock_guard<std::shared_timed_mutex> writerLock(gridMutex);
     //update the position map:
@@ -155,7 +155,7 @@ void GridMovement::updatePos(int oldX, int oldY, int newX, int newY, int id)
 }
 
 
-bool GridMovement::updateIfFree(int oldX, int oldY, int newX, int newY, int id)
+bool GridMovement::updateIfFree(int oldX, int oldY, int oldZ, int newX, int newY, int newZ, int id)
 {
     std::lock_guard<std::shared_timed_mutex> writerLock(gridMutex);
 
@@ -200,7 +200,7 @@ bool GridMovement::updateIfFree(int oldX, int oldY, int newX, int newY, int id)
 }
 
 
-bool GridMovement::checkCollision(int x, int y)
+bool GridMovement::checkCollision(int x, int y, int z)
 {
     std::shared_lock<std::shared_timed_mutex> readerLock(gridMutex);
 
@@ -217,7 +217,7 @@ bool GridMovement::checkCollision(int x, int y)
 
 }
 
-pList GridMovement::checkPosition(int x, int y)
+pList GridMovement::checkPosition(int x, int y, int z)
 {
     std::shared_lock<std::shared_timed_mutex> readerLock(gridMutex);
     char buffer[64];

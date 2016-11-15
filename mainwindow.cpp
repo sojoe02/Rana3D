@@ -40,6 +40,8 @@
 #include "simulationcore/eventqueue.h"
 #include "postprocessing/colorutility.h"
 
+#include <GL/glut.h>
+#include <QtOpenGL/QGLWidget>
 
 #include "eventdialog.h"
 #include "helpdialog.h"
@@ -60,10 +62,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->progressBar->setMaximum(100);
     ui->progressBar->setMinimum(0);
     ui->progressBar->setValue(0);
-    ui->graphicsView->setScene(scene);
+    //ui->graphicsView->setScene(scene);
     scene->setBackgroundBrush(Qt::gray);
 	ui->runButton->setDisabled(true);
 //dr.	ui->adv_spinBox->hide();
+    int argc = 0;
+    char *argv[1];
+    argv[0] = (char*)"a";
+    glutInit(&argc, argv);
 
     this->setWindowTitle("Rana 1.8");
     qRegisterMetaType<INFOLIST>("INFOLIST");
@@ -80,8 +86,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	QObject::connect(this,SIGNAL(writeStatusSignal(unsigned long long,unsigned long long)),
 					 this,SLOT(on_udateStatus(unsigned long long,unsigned long long)));
 
-	QObject::connect(this,SIGNAL(addGraphicAgentSignal(int,int,int)),
-						this,SLOT(on_addGraphicAgent(int,int,int)));
+    QObject::connect(this,SIGNAL(addGraphicAgentSignal(int,double,double,double,double)),
+                        this,SLOT(on_addGraphicAgent(int,double,double,double,double)));
 
 	QObject::connect(this, SIGNAL(removeGraphicAgentSignal(int)),
 					 this, SLOT(on_removeGraphicAgent(int)));
@@ -109,7 +115,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //versionString = QString("<b><font color=\"green\">RANA</b></font> version 1.7.14:0.8.2");
 
     //ui->statusBar->addWidget(new QLabel(versionString));
-	ui->graphicsView->setDragMode(QGraphicsView::ScrollHandDrag);
+//	ui->graphicsView->setDragMode(QGraphicsView::ScrollHandDrag);
 
 	sim_controlTab = ui->simControlTab;
 	sim_viewTab = ui->simLiveView;
@@ -119,7 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ppConstruction();
     dialogConstruction();
 
-	ui->graphicsView->viewport()->installEventFilter(this);
+//	ui->graphicsView->viewport()->installEventFilter(this);
 
 	Output::Inst()->RanaDir =
 			QCoreApplication::applicationDirPath().toUtf8().constData();
@@ -150,14 +156,15 @@ void MainWindow::on_generateButton_clicked()
     ui->runButton->setEnabled(false);
 	//initializeTimer->start(2000);
 	int i = 0;
-	for(auto iter=graphAgents.begin(); iter!=graphAgents.end(); ++iter, i++) 
+    /*for(auto iter=graphAgents.begin(); iter!=graphAgents.end(); ++iter, i++)
 	{
-		//Output::Inst()->kprintf("item #%i ", i);
-		scene->removeItem(*iter);
-        delete *iter;
-	}
+      delete *iter;
 
-	ui->graphicsView->viewport()->update();
+    }*/
+
+    ui->openGLWidget->GLWidget::spheres.clear();
+//	ui->graphicsView->viewport()->update();
+    ui->openGLWidget->GLWidget::update();
 
     graphAgents.clear();
     GridMovement::clearGrid();
@@ -166,7 +173,7 @@ void MainWindow::on_generateButton_clicked()
         on_generateEmptyMapButton_clicked();
     }
 
-	if(mapItem != NULL){
+//	if(mapItem != NULL){
 
 		//mapItem->setPixmap(QPixmap::fromImage(*mapImage));
         //mapItem->setZValue(1);
@@ -215,8 +222,8 @@ void MainWindow::on_generateButton_clicked()
             Output::Inst()->kprintf("Cannot generate Environment: No valid path to agent");
             ui->generateButton->setEnabled(true);
         }
-    } else
-        Output::Inst()->kprintf("No map has been loaded, please do that...");
+  //  } else
+   //     Output::Inst()->kprintf("No map has been loaded, please do that...");
 
     initializeTimer->start(400);
     //ui->generateButton->setEnabled(true);
@@ -264,7 +271,7 @@ void MainWindow::on_browseMapButton_clicked()
                                      tr("Cannot Load %1.").arg(fileName));
             return;
         }
-        defineMap();
+        //defineMap();
     }
 }
 
@@ -278,7 +285,7 @@ void MainWindow::on_generateEmptyMapButton_clicked()
 						  QImage::Format_RGB32);
 	mapImage->fill(Qt::GlobalColor::black);
 
-	defineMap();
+//	defineMap();
 }
 
 
@@ -396,31 +403,37 @@ void MainWindow::on_updateMap(INFOLIST infolist)
 {
     //Output::Inst()->kprintf("updating map fired...");
 
-    mapItem->setPixmap(QPixmap::fromImage(*mapImage));
-    mapItem->setZValue(1);
+    //mapItem->setPixmap(QPixmap::fromImage(*mapImage));
+    //mapItem->setZValue(1);
 
     //INFOLIST::iterator itr;
 
     for(auto itr = infolist.begin(); itr != infolist.end(); itr++)
     {
-        int x = itr->x/Phys::getScale();
-        int y = itr->y/Phys::getScale();
+        double x = itr->x/Phys::getScale();
+        double y = itr->y/Phys::getScale();
+        double z = itr->z/Phys::getScale();
+        double rad = itr->radius/Phys::getScale();
 		int Id = itr->id;
 
-        if(!graphAgents.contains(Id))
+        std::map<int,sphereItem>::iterator it = graphAgents.find(Id);
+        sphereItem sItem;
+        if(it != graphAgents.end())
         {
-			addGraphicAgent(Id, x, y);
-
+            addGraphicAgent(Id,x,y,z,rad);
         } else
         {
-            auto i = graphAgents.find(Id);
-            agentItem *gfxItem = i.value();
-            gfxItem->setX(x);
-            gfxItem->setY(y);
+            sItem.xPos=x/100;
+            sItem.yPos=y/100;
+            sItem.zPos=z/100;
+            sItem.radius=rad;
+
+            ui->openGLWidget->GLWidget::spheres[Id]=sItem;
+            graphAgents[Id]=sItem;
         }
 	}
 
-	ui->graphicsView->viewport()->update();
+    ui->openGLWidget->GLWidget::update();
 
 }
 
@@ -429,45 +442,36 @@ void MainWindow::on_updateMap(INFOLIST infolist)
  * @param id the id of the agent.
  * @param posX X position of the agent.
  * @param posY Y position of the agent.
+ * @param posZ Z position of the agent.
+ * @param radius radius of the agent.
  * @see MainWindow::on_addGraphicAgent()
  */
 
-void MainWindow::addGraphicAgent(int id, int posX, int posY)
+void MainWindow::addGraphicAgent(int id, double posX, double posY, double posZ, double radius)
 {
-    //ui->generateButton->setEnabled(false);
-    //ui->runButton->setEnabled(false);
-	emit addGraphicAgentSignal(id, posX, posY);
+    emit addGraphicAgentSignal(id, posX, posY, posZ, radius);
 }
 
-void MainWindow::on_addGraphicAgent(int id, int posX, int posY)
+void MainWindow::on_addGraphicAgent(int id, double posX, double posY, double posZ, double radius)
 {
 
     //itializeTimer->start(500);
-	agentItem *gfxItem = new agentItem(QString::number(id));
-	gfxItem->setZValue(2);
-	gfxItem->setX(posX);
-    gfxItem->setY(posY);
-    gfxItem->showID(!ui->vis_disableAgentIDs->isChecked());
+    sphereItem gfxItem;
+    gfxItem.xPos=posX/100;
+    gfxItem.yPos=posY/100;
+    gfxItem.zPos=posZ/100;
+    gfxItem.radius=radius;
 
-    //Output::Inst()->kprintf("ID is %i", Id);
-    //Output::Inst()->kprintf("Size of the agent array %i", graphAgents.size());
+    auto itr = graphAgents.find(id);
+    if(itr != graphAgents.end())
+    {
+        graphAgents.erase(id);
+        ui->openGLWidget->GLWidget::spheres.erase(id);
+    }
 
-	auto itr = graphAgents.find(id);
-	if(itr != graphAgents.end())
-	{
-		scene->removeItem(*itr);
-		delete *itr;
-		graphAgents.remove(id);
-	}
+    graphAgents.insert(std::make_pair(id, gfxItem));
+    ui->openGLWidget->GLWidget::spheres.insert(std::make_pair(id, gfxItem));
 
-	scene->addItem(gfxItem);
-	graphAgents.insert(id, gfxItem);
-
-    //ui->runButton->setEnabled(true);
-    //if (ui->generateButton->isEnabled())
-      //  ui->generateButton->setEnabled(true);
-
-    //ui->generateButton->setEnabled(true);
 }
 
 void MainWindow::changeGraphicAgentColor(int id, int r, int g, int b, int alpha)
@@ -478,9 +482,15 @@ void MainWindow::changeGraphicAgentColor(int id, int r, int g, int b, int alpha)
 
 void MainWindow::on_changeGraphicAgentColor(int id, int r, int g, int b, int alpha)
 {
-	auto i = graphAgents.find(id);
-	agentItem *gfxItem = i.value();
-    gfxItem->setColor(r,g,b,alpha);
+    std::map<int,sphereItem>::iterator it = graphAgents.find(id);
+    sphereItem sItem;
+        sItem = it->second;
+        sItem.red=r;
+        sItem.green=g;
+        sItem.blue=b;
+
+        ui->openGLWidget->GLWidget::spheres[id]=sItem;
+        graphAgents[id]=sItem;
 }
 
 void MainWindow::enableRunButton(bool enabled)
@@ -493,41 +503,6 @@ void MainWindow::on_enableRunButton(bool enabled)
     //QThread::sleep(100);
     runTimer->start(250);
     //ui->runButton->setEnabled(enabled);
-}
-/**
- * @brief MainWindow::on_disableAgentsCheckBox_toggled Disable agent markers
- * on the live-map.
- * @param checked
- */
-
-void MainWindow::on_vis_disableAgentsCheckBox_toggled(bool checked)
-{
-    if(checked)
-    {
-        for(auto itr = graphAgents.begin(); itr != graphAgents.end(); ++itr)
-        {
-            itr.value()->hide();
-        }
-    }
-    else
-    {
-        for(auto itr = graphAgents.begin(); itr != graphAgents.end(); ++itr)
-        {
-            itr.value()->show();
-        }
-
-    }
-
-    ui->graphicsView->viewport()->update();
-}
-
-void MainWindow::on_vis_disableAgentIDs_toggled(bool checked)
-{
-	for(auto itr = graphAgents.begin(); itr != graphAgents.end(); ++itr)
-	{
-		itr.value()->showID(!checked);
-	}
-	ui->graphicsView->viewport()->update();
 }
 
 
@@ -547,9 +522,8 @@ void MainWindow::on_removeGraphicAgent(int id)
 	auto iter = graphAgents.find(id);
 	if(iter != graphAgents.end())
 	{
-		scene->removeItem(*iter);
-		delete *iter;
-		graphAgents.remove(id);
+        graphAgents.erase(id);
+        ui->openGLWidget->GLWidget::spheres.erase(id);
     }
 }
 
@@ -567,38 +541,32 @@ void MainWindow::on_runTimerTimeout()
 
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
-
-	ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-	// Scale the view / do the zoom
-    QTransform transform = ui->graphicsView->transform();
-    double scale = .50;
+    /*double scale = .50;
 
     if(event->delta() > 0)
     {
 		// Zoom in
-        //factor = .15 + factor;
-        double change = transform.m11() + scale;
-        ui->graphicsView->setTransform(QTransform::fromScale(change,change));
+        ui->openGLWidget->GLWidget::zoom=scale;
+        ui->openGLWidget->GLWidget::update();
 
     }
     else
     {
-        double change = transform.m11() - scale;
-        ui->graphicsView->setTransform(QTransform::fromScale(change,change));
+        ui->openGLWidget->GLWidget::zoom=-scale;
+        ui->openGLWidget->GLWidget::update();
     }
-
-    transform = ui->graphicsView->transform();
-	ui->zoomSlider->setValue(std::abs(100*transform.m11()));
-	ui->zoomLabel->setText(QString::number(std::abs(100*transform.m11())));
+*/
+//    ui->zoomSlider->setValue(std::abs(100*transform.m11()));
+//    ui->zoomLabel->setText(QString::number(std::abs(100*transform.m11())));
 
 }
 
 bool MainWindow::eventFilter(QObject *object, QEvent *event)
 {
-	if(object == ui->graphicsView->viewport() && event->type() == QEvent::Wheel)
-	{
-		return true;
-	}
+//	if(object == ui->graphicsView->viewport() && event->type() == QEvent::Wheel)
+//	{
+//		return true;
+//	}
 	return false;
 }
 
@@ -627,13 +595,13 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     }
     else if(ui->tabWidget->currentIndex() == ui->tabWidget->indexOf(sim_viewTab))
     {
-        if(mapItem != NULL)
-            ui->graphicsView->fitInView(mapItem->boundingRect(),
-									Qt::KeepAspectRatio);
+//        if(mapItem != NULL)
+            //ui->graphicsView->fitInView(mapItem->boundingRect(),
+            //						Qt::KeepAspectRatio);
 
-		QTransform transform = ui->graphicsView->transform();
-		ui->zoomSlider->setValue(std::abs(100*transform.m11()));
-		ui->zoomLabel->setText(QString::number(std::abs(100*transform.m11())));
+//		QTransform transform = ui->graphicsView->transform();
+//		ui->zoomSlider->setValue(std::abs(100*transform.m11()));
+//		ui->zoomLabel->setText(QString::number(std::abs(100*transform.m11())));
 
 	}
 }
@@ -644,43 +612,6 @@ void MainWindow::on_resizeTimerTimeout()
     zmap->setSize(ui->vis_mapGraphicsView->width(),ui->vis_mapGraphicsView->height());
     zmap->changeMode(zmode);
 }
-
-/**
- * @brief ensures that the automatic zoom is only set on view change.
- * @param index current active tabs index
- */
-void MainWindow::on_tabWidget_currentChanged(int index)
-{
-	control->toggleLiveView(false);
-
-	if(index == ui->tabWidget->indexOf(vis_mapTab))
-	{
-        ui->vis_graphicsView->fitInView(eventMapScene->sceneRect(),Qt::KeepAspectRatio);
-
-        if(zmap != NULL)
-		{
-            //zmap->setPos(0,0);
-            //zmap->setSize(ui->vis_mapGraphicsView->width(),ui->vis_mapGraphicsView->height());
-            //ui->vis_mapGraphicsView->fitInView(eventMapScene->sceneRect());//
-            resizeTimer.start( 500 );
-		}
-
-    }
-    else if(ui->tabWidget->currentIndex() == ui->tabWidget->indexOf(sim_viewTab))
-    {
-        if(mapItem != NULL)
-            ui->graphicsView->fitInView(mapItem->boundingRect(),
-                                    Qt::KeepAspectRatio);
-
-		control->toggleLiveView(true);
-
-		QTransform transform = ui->graphicsView->transform();
-		ui->zoomSlider->setValue(std::abs(100*transform.m11()));
-		ui->zoomLabel->setText(QString::number(std::abs(100*transform.m11())));
-
-	}
-}
-
 
 /**
  * @brief Allows browsing for valid lua agents.
@@ -734,36 +665,6 @@ void MainWindow::runButtonHide()
     //ui->runButton->setDisabled(true);
 }
 
-/**
- * @brief defines the current map
- * This is an internal helper function
- * @see MainWindow::on_browseMapButton_clicked()
- * @see MainWindow::on_generateMap_clicked()
- */
-void MainWindow::defineMap()
-{
-	if(mapItem == NULL)
-	{
-		mapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*mapImage));
-		scene->addItem(mapItem);
-    }
-    else
-	{
-		mapItem->setPixmap(QPixmap::fromImage(*mapImage));
-		scene->setSceneRect(mapItem->boundingRect());
-	}
-
-	Output::Inst()->kprintf("Map information generated");
-	MapHandler::setImage(mapImage);
-	Phys::setEnvironment(mapImage->width(),mapImage->height());
-    //GridMovement::initGrid(mapImage->width(), mapImage->height());
-    ui->graphicsView->fitInView(mapItem->sceneBoundingRect(),Qt::KeepAspectRatio);
-//control->toggleLiveView(true);
-
-    QTransform transform = ui->graphicsView->transform();
-    ui->zoomSlider->setValue(std::abs(100*transform.m11()));
-    ui->zoomLabel->setText(QString::number(std::abs(100*transform.m11())));
-}
 
 /**
  * @brief Sets a delay on the simulation
@@ -785,8 +686,11 @@ void MainWindow::on_zoomSlider_valueChanged(int value)
 	double scale = std::abs((double)value/100);
 
 	ui->zoomLabel->setText(QString().setNum(value));
+    ui->openGLWidget->GLWidget::zoom=scale;
+    ui->openGLWidget->GLWidget::update();
 
-	ui->graphicsView->setTransform(QTransform::fromScale(scale,scale));
+
+//	ui->graphicsView->setTransform(QTransform::fromScale(scale,scale));
 }
 
 /**
@@ -1222,71 +1126,6 @@ void MainWindow::on_vis_mapTypeComboBox_currentIndexChanged(const QString &arg1)
 	}
 }
 
-/**
- * @brief Changes the currently active map
- * This enables the user to browse the various maps, via an index
- * @param arg1 wished for map
- */
-void MainWindow::on_vis_activeMapSpinBox_valueChanged(int arg1)
-{
-	if(zBlocks != NULL)
-	{
-		for(auto it = zBlocks->begin(); it != zBlocks->end(); ++it)
-		{
-			it.value()->setTime(arg1);
-		}
-    }
-
-
-
-	double currentTime = ui->vis_activeMapSpinBox->value() *
-			ui->vis_activeTimeResolutionLabel->text().toDouble();
-
-	QString stringtmp = QString::number(currentTime);
-	stringtmp.append("\t - \t");
-	stringtmp.append(QString::number(currentTime + ui->vis_activeTimeResolutionLabel->text().toDouble()));
-	ui->vis_activeTimeLabel->setText(stringtmp);
-    //if(PPactiveAgents != NULL)
-    //{
-      //eventScene->removeItem(PPactiveAgents);
-     // eventScene->destroyItemGroup(PPactiveAgents);
-     // PPactiveAgents = NULL;
-//}
-    //draw agents from the position map:
-    //for(auto itr = groupItems.begin(); itr != groupItems.end(); ++itr)
-    //{
-    //    eventScene->re
-    //}
-
-    for (auto itr = groupItems.begin(); itr != groupItems.end(); ++itr)
-    {
-       eventScene->removeItem(*itr);
-
-    }
-
-    groupItems.clear();
-    auto itr = agentpositionMap.lowerBound(currentTime);
-    if (itr != agentpositionMap.constEnd())
-    {
-        for(auto ditr = itr.value().begin(); ditr != itr.value().end(); ++ditr)
-        {
-            agentItem *item = new agentItem(QString::number(ditr.value().id));
-            item->setX(ditr.value().x/ui->vis_resolutionSpinBox->value());
-            item->setY(ditr.value().y/ui->vis_resolutionSpinBox->value());
-            //item->setX(20);
-            //item->setY(20);
-            item->setZValue(3);
-            eventScene->addItem(item);
-            groupItems.append(item);
-            //Output::Inst()->kprintf("agent item found");
-        }
-    }
-    //PPactiveAgents = eventScene->createItemGroup(groupItems);
-    ///PPactiveAgents->setZValue(3);
-    ui->vis_graphicsView->viewport()->update();
-    zmap->setPos(0,0);
-    zmap->setSize(ui->vis_mapGraphicsView->width(),ui->vis_mapGraphicsView->height());
-}
 
 /**
  * @brief Stop the event processing, if active.
@@ -1314,13 +1153,13 @@ void MainWindow::on_vis_eventZoomSlider_valueChanged(int value)
 
 }
 
-void MainWindow::on_tabWidget_tabBarClicked(int index)
+/*void MainWindow::on_tabWidget_tabBarClicked(int index)
 {
 	//if(zmap != NULL)
 	//zmap->setSize(50,ui->vis_mapGraphicsView->height());
-}
+}*/
 
-/**
+/*
  * @brief Starts playback of the eventmaps
  * The playback is done by changing map index with a timed delay, defined by the
  * user
@@ -1353,8 +1192,8 @@ void MainWindow::on_zMapTimerTimeout()
 		index = 0;
 	}
 
-	on_vis_activeMapSpinBox_valueChanged(index);
-	ui->vis_activeMapSpinBox->setValue(index);
+//	on_vis_activeMapSpinBox_valueChanged(index);
+//	ui->vis_activeMapSpinBox->setValue(index);
 
 }
 

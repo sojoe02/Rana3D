@@ -132,6 +132,7 @@ public:
     void movement();
     double destinationX;
     double destinationY;
+    double destinationZ;
     double speed; //meters pr second
     bool moving;
     bool gridmove;

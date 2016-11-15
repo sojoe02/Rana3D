@@ -85,7 +85,7 @@ protected:
     Sector* sector;
 	rgba color;
 
-	double radius;
+    double sRadius;
 	double mass;
 	double charge;
 

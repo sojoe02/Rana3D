@@ -58,7 +58,7 @@ end
 
 function takeStep()
 
-	local id = Agent.addAgent("08_flasher.lua")
+	--local id = Agent.addAgent("08_flasher.lua")
 
 end
 

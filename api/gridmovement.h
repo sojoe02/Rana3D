@@ -35,17 +35,17 @@ public:
     GridMovement(){}
 
     static void initGrid(int scale);
-    static void addPos(int x, int y, int id);
-    static void updatePos(int oldX, int oldY, int newX, int newY, int id);
-    static bool checkCollision(int x, int y);
-    static pList checkPosition(int x, int y);
+    static void addPos(int x, int y, int z, int id);
+    static void updatePos(int oldX, int oldY, int oldZ, int newX, int newY, int newZ, int id);
+    static bool checkCollision(int x, int y, int z);
+    static pList checkPosition(int x, int y, int z);
 
 
 	static void clearGrid();
     static void removePos(int id);
 
     static double getScale();
-    static bool updateIfFree(int oldX, int oldY, int newX, int newY, int id);
+    static bool updateIfFree(int oldX, int oldY, int oldZ, int newX, int newY, int newZ, int id);
 
 private:
     //maps that contain the amount of agents at a givin x,y position

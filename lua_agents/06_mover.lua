@@ -46,6 +46,7 @@
 Event = require "ranalib_event"
 Stat = require "ranalib_statistic"
 Move = require "ranalib_movement"
+Agent = require "ranalib_agent"
 
 -- Initialization of the agent.
 function initializeAgent()
@@ -54,6 +55,14 @@ function initializeAgent()
 	if Moving ~= true then
 		say("I am not moving".. STEP_RESOLUTION.. ":" .. PositionX)
 	end
+
+
+
+	PositionX=0
+	PositionY=0
+	PositionZ=0
+	Radius = 0.1
+
 	--Moving = true
 	--DestinationX = 1
 	--DestinationY = 1
@@ -63,13 +72,33 @@ end
 
 function takeStep()
 
+	--Agent.changeColor{r=200,g=55,b=0}
 	if not Moving then
 
-		local x = Stat.randomInteger(1, ENV_WIDTH)
-		local y = Stat.randomInteger(1, ENV_HEIGHT)		
 
-		Move.to{x=x, y=y, speed=10}
-		
+		local x = Stat.randomInteger(-1, 1)
+		local y = Stat.randomInteger(-1, 1)
+		local z = Stat.randomInteger(-1, 1)
+
+		PositionX = PositionX+x
+		PositionY = PositionY+y
+		PositionZ = PositionZ+z
+		if PositionX > 1000 then
+			PositionX = 1000
+		elseif PositionX < -1000 then
+			PositionX = -1000
+		end
+		if PositionY > 1000 then
+			PositionY = 1000
+		elseif PositionY < -1000 then
+			PositionY = -1000
+		end
+		if PositionZ > 1000 then
+			PositionZ = 1000
+		elseif PositionZ < -1000 then
+			PositionZ = -1000
+		end
+
 	end
 end
 

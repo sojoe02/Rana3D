@@ -31,17 +31,25 @@
 
 -- Import valid Rana lua libraries.
 Event = require "ranalib_event"
+Agent = require "ranalib_agent"
 
 -- Init of the lua frog, function called upon initilization of the LUA auton.
 function initializeAgent()
 
 	l_debug("Pole agent #: " .. ID .. " has been initialized")
+	Radius = 0.01
 
 end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
 	
-	Event.emit{targetID=sourceID, speed=343, description="echo"}
+	--Event.emit{targetID=sourceID, speed=0, description="echo"}
+	--l_debug("Heard a")
+	--l_debug(eventDescription)
+	--if eventDescription=="beep" then
+		Event.emit{speed=0,description="echo"}
+	--	l_debug("Echo!")
+	--end
 
 end
 

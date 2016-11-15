@@ -28,7 +28,7 @@
 #include <QList>
 #include <map>
 
-#include "graphics/agentItem.h"
+#include "graphics/sphereitem.h"
 #include "postprocessing/postcontrol.h"
 #include "postprocessing/graphics/zblock.h"
 #include "utility.h"
@@ -74,7 +74,7 @@ public:
 	void setEventSceneRect(int x, int y);
 	bool eventFilter(QObject *watched, QEvent *event);
 
-	void addGraphicAgent(int Id, int posX, int posY);
+    void addGraphicAgent(int Id, double posX, double posY, double posZ, double radius);
 	void removeGraphicAgent(int id);
 	void changeGraphicAgentColor(int id, int r, int g, int b, int alpha);
     void enableRunButton(bool enabled);
@@ -105,7 +105,7 @@ private slots:
 
     void on_enableRunButton(bool enabled);
 
-	void on_addGraphicAgent(int id, int posX, int posY);
+    void on_addGraphicAgent(int id, double posX, double posY, double posZ, double radius);
     void on_changeGraphicAgentColor(int id, int r, int g, int b, int alpha);
     void on_removeGraphicAgent(int Id);
 
@@ -125,13 +125,13 @@ private slots:
 	//dialogs:
 	void eventDialog(); 
 	void on_vis_eventBrowsePushButton_clicked();
-	void on_vis_activeMapSpinBox_valueChanged(int arg1);
+    //void on_vis_activeMapSpinBox_valueChanged(int arg1);
 	void on_vis_stopEventProcessingPushButton_clicked();
 	void on_actionDisable_Simulation_Output_toggled(bool arg1);
 	void on_vis_eventZoomSlider_valueChanged(int value);
-	void on_tabWidget_tabBarClicked(int index);
+    //void on_tabWidget_tabBarClicked(int index);
 	void resizeEvent(QResizeEvent* event);
-	void on_tabWidget_currentChanged(int index);
+    //void on_tabWidget_currentChanged(int index);
 	void on_vis_eventPlayPushButton_clicked();
 	void on_vis_clearOutputPushButton_clicked();
 
@@ -143,8 +143,8 @@ private slots:
 	void on_macroSpinBox_valueChanged(int arg1);
 	void on_timeResSpinBox_valueChanged(int arg1);
 
-	void on_vis_disableAgentsCheckBox_toggled(bool checked);
-	void on_vis_disableAgentIDs_toggled(bool checked);
+    //void on_vis_disableAgentsCheckBox_toggled(bool checked);
+    //void on_vis_disableAgentIDs_toggled(bool checked);
 	
 signals:
 
@@ -154,7 +154,7 @@ signals:
     void writeRegularSignal(QString something);
     void enableRunButtonSignal(bool);
 
-	void addGraphicAgentSignal(int id, int posX, int posY);
+    void addGraphicAgentSignal(int id, double posX, double posY, double posZ, double radius);
     void changeGraphicAgentColorSignal(int id, int r, int b, int g, int alpha);
 	void removeGraphicAgentSignal(int Id);
 
@@ -170,7 +170,7 @@ private:
     QImage *mapImage;
     QGraphicsPixmapItem *mapItem;
     QGraphicsScene *scene;
-	QMap<int, agentItem* > graphAgents;
+    std::map<int, sphereItem> graphAgents;
 	QGraphicsItemGroup *agentGroup;
 
     QMutex lock;

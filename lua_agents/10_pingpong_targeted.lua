@@ -54,23 +54,36 @@ joined = false
 function initializeAgent()
 
 	say("Agent #: " .. ID .. " has been initialized")
-	group = Stat.randomInteger(1,5)
+	group = 1--Stat.randomInteger(1,5)
+	PositionZ=Stat.randomInteger(-ENV_WIDTH,ENV_WIDTH)
+	PositionY=Stat.randomInteger(-ENV_WIDTH,ENV_WIDTH)
+	PositionX=Stat.randomInteger(-ENV_WIDTH,ENV_WIDTH)
 	Agent.joinGroup(group)
 
 
 end
 
-function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
+function handleEvent(sourceX, sourceY, sourceZ, sourceID, eventDescription, eventTable)
 	
-	if eventDescription == "ping" and ID ~= 1 then
+	--if eventDescription == "ping" and ID ~= 1 then
 	
-		l_print("Agent: "..ID .." received a ping from: "..sourceID ..", saying: "..eventTable.msg)
-		Event.emit{targetID=sourceID, speed=343, description="pong", targetGroup=group}
+	--	l_print("Agent: "..ID .." received a ping from: "..sourceID ..", saying: "..eventTable.msg)
+	--	Event.emit{targetID=sourceID, speed=343, description="pong", targetGroup=group}
 
-	elseif eventDescription == "pong" then
+	--elseif eventDescription == "pong" then
 		
-		l_print("Agent: "..ID.." received a pong from agent: ".. sourceID)
-	end
+	--	l_print("Agent: "..ID.." received a pong from agent: ".. sourceID)
+	--end
+
+	--l_debug("Heard something from "..eventTable.msg)
+	direction=math.sqrt(sourceX*sourceX+sourceY*sourceY+sourceZ*sourceZ)
+	if direction>0.1 then
+	PositionX=PositionX+10*(sourceX-PositionX)/direction
+	PositionY=PositionY+10*(sourceY-PositionY)/direction
+	PositionZ=PositionZ+10*(sourceZ-PositionZ)/direction
+end
+
+
 
 end
 
@@ -81,10 +94,14 @@ function takeStep()
 	--	say("Agent #"..ID.." joined a group "..group )
 	--	joined = true
 	--end
+	Agent.changeColor{r=255,g=0,b=0}
 
 	if Stat.randomInteger(1,1000) <= 1 and ID==1 then
-		l_debug("Agent:"..ID.." is emiting ping")
-	 	Event.emit{speed=343, description="ping",table={msg="I am agent "..ID}, targetGroup=group}
+	 	--Event.emit{speed=0, description="ping",table={msg="I am agent "..ID}, targetGroup=group}
+	 	Event.emit{speed=343,description="ping",targetGroup=group,table={msg="hello?"}} --eventTable and ping are nil values.
+	 	PositionX=PositionX+Stat.randomInteger(-10,10)
+	 	PositionY=PositionY+Stat.randomInteger(-10,10)
+	 	PositionZ=PositionZ+Stat.randomInteger(-10,10)
 	end
 
 end

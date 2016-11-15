@@ -77,11 +77,11 @@ int Phys::getMacroFactor()
     return Phys::macroFactor;
 }
 
-unsigned long long Phys::speedOfSound(double x_origin, double y_origin,
-                                      double x_dest, double y_dest)
+unsigned long long Phys::speedOfSound(double x_origin, double y_origin, double z_origin,
+                                      double x_dest, double y_dest, double z_dest)
 {
 
-	double distance = sqrt( pow((x_origin-x_dest), 2) + pow((y_origin-y_dest),2) );
+    double distance = sqrt( pow((x_origin-x_dest), 2) + pow((y_origin-y_dest),2) + pow((z_origin-z_dest),2));
 
     unsigned long long tmp = uint64_t (distance / (343.2 * Phys::timeResolution));
     unsigned long long a_timestep = tmp + Phys::c_timeStep;
@@ -89,21 +89,21 @@ unsigned long long Phys::speedOfSound(double x_origin, double y_origin,
     return a_timestep;
 }
 
-unsigned long long Phys::speedOfEvent(double x_origin, double y_origin,
-		double x_dest, double y_dest, double propagationSpeed)
+unsigned long long Phys::speedOfEvent(double x_origin, double y_origin, double z_origin,
+        double x_dest, double y_dest, double z_dest, double propagationSpeed)
 {
 
-	double distance = sqrt( pow((x_origin-x_dest), 2) + pow((y_origin-y_dest),2) );
+    double distance = sqrt( pow((x_origin-x_dest), 2) + pow((y_origin-y_dest),2) + pow((z_origin-z_dest),2));
     double tmp = distance / (propagationSpeed * Phys::timeResolution);
     unsigned long long a_timestep = tmp + Phys::c_timeStep;
 
     return a_timestep;
 }
 
-double Phys::calcDistance(double x_origin, double y_origin, 
-                          double x_dest, double y_dest)
+double Phys::calcDistance(double x_origin, double y_origin, double z_origin,
+                          double x_dest, double y_dest, double z_dest)
 {
-	return  sqrt( pow((x_origin-x_dest), 2) + pow((y_origin-y_dest),2) );
+    return  sqrt( pow((x_origin-x_dest), 2) + pow((y_origin-y_dest),2) + pow((z_origin-z_dest),2));
 }
 
 unsigned long long Phys::getCTime()
