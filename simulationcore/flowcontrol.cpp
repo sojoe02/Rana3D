@@ -122,11 +122,9 @@ void FlowControl::populateSystem()
  */
 void FlowControl::retrievePopPos()
 {
-
-    std::list<agentInfo> agentPositions = masteragent->retrievePopPos();
-
+    std::list<agentInfo> agentPositions = masteragent->fieldMovement();
+    //std::list<agentInfo> agentPositions = masteragent->retrievePopPos();
     control->refreshPopPos(agentPositions);
-
     if(Output::RunSimulation.load())
     {
         if(storePositions == true )
@@ -139,6 +137,7 @@ void FlowControl::retrievePopPos()
                 agentTmu agenttmu;
                 agenttmu.x = apos.x;
                 agenttmu.y = apos.y;
+                agenttmu.z = apos.z;
                 agenttmu.id = apos.id;
                 agenttmu.tmu = cMacroStep;
                 //Output::Inst()->kprintf("id %d, posx %d, posY %d",agenttmu.info.id, agenttmu.info.x, agenttmu.info.y);
@@ -263,8 +262,8 @@ void FlowControl::runSimulation(int time)
 
     auto endsim = steady_clock::now();
     duration_cast<seconds>(start2-endsim).count();
-    Output::Inst()->kprintf("Simulation run took:\t %llu[s] of computing time"
-                            , duration_cast<seconds>(endsim - start2).count()
+    Output::Inst()->kprintf("Simulation run took:\t %llu[ms] of computing time"
+                            , duration_cast<milliseconds>(endsim - start2).count()
                             );
     file.close();
 }

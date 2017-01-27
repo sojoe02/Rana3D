@@ -56,49 +56,27 @@ function initializeAgent()
 		say("I am not moving".. STEP_RESOLUTION.. ":" .. PositionX)
 	end
 
-
-
 	PositionX=0
 	PositionY=0
 	PositionZ=0
-	Radius = 0.1
+	Mass = 0
+	Charge = 0
+	Radius = 1000
 
-	--Moving = true
-	--DestinationX = 1
-	--DestinationY = 1
-	--Speed = 3
+	counter = 0	
+
+	--Agent.changeColor{r=100,g=200,b=200}
+
 end
 
 
 function takeStep()
 
-	--Agent.changeColor{r=200,g=55,b=0}
-	if not Moving then
+
+	PositionX = PositionX + Stat.randomInteger(-1,1)
+	PositionY = PositionY + Stat.randomInteger(-1,1)
+	--PositionX = PositionX + Stat.randomInteger(-1,1)
+		--Agent.changeColor{r=255,g=0,b=0}
 
 
-		local x = Stat.randomInteger(-1, 1)
-		local y = Stat.randomInteger(-1, 1)
-		local z = Stat.randomInteger(-1, 1)
-
-		PositionX = PositionX+x
-		PositionY = PositionY+y
-		PositionZ = PositionZ+z
-		if PositionX > 1000 then
-			PositionX = 1000
-		elseif PositionX < -1000 then
-			PositionX = -1000
-		end
-		if PositionY > 1000 then
-			PositionY = 1000
-		elseif PositionY < -1000 then
-			PositionY = -1000
-		end
-		if PositionZ > 1000 then
-			PositionZ = 1000
-		elseif PositionZ < -1000 then
-			PositionZ = -1000
-		end
-
-	end
 end
-

@@ -28,7 +28,6 @@
 #include <QList>
 #include <map>
 
-#include "graphics/sphereitem.h"
 #include "postprocessing/postcontrol.h"
 #include "postprocessing/graphics/zblock.h"
 #include "utility.h"
@@ -105,7 +104,7 @@ private slots:
 
     void on_enableRunButton(bool enabled);
 
-    void on_addGraphicAgent(int id, double posX, double posY, double posZ, double radius);
+    void on_addGraphicAgent(int Id, double posX, double posY, double posZ, double radius);
     void on_changeGraphicAgentColor(int id, int r, int g, int b, int alpha);
     void on_removeGraphicAgent(int Id);
 
@@ -170,7 +169,7 @@ private:
     QImage *mapImage;
     QGraphicsPixmapItem *mapItem;
     QGraphicsScene *scene;
-    std::map<int, sphereItem> graphAgents;
+    std::map<int, agentInfo> graphAgents;
 	QGraphicsItemGroup *agentGroup;
 
     QMutex lock;

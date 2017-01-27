@@ -110,7 +110,7 @@ void Supervisor::generateMap(double width, double height, int sectorAmount, doub
         ss << i;
         id.append(ss.str());
 
-        Sector *nest = new Sector(0,0,width,height,this,i);
+        Sector *nest = new Sector(0,0,0,width,height,this,i);
 
         std::thread *t = new std::thread(Supervisor::runStepPhase, nest);
         threads.push_back(t);
@@ -138,6 +138,16 @@ std::list<agentInfo> Supervisor::retrievePopPos()
     for(const auto &s : sectors)
     {
         s->retrievePopPos(agentinfo);
+    }
+
+    return agentinfo;
+}
+
+std::list<agentInfo> Supervisor::fieldMovement(){
+    std::list<agentInfo> agentinfo;
+    for (const auto&s : sectors)
+    {
+        s->fieldMovement(agentinfo);
     }
 
     return agentinfo;

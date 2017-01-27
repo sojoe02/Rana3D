@@ -45,7 +45,7 @@ class AgentLuaInterface;
 class Sector
 {
 	public:
-        Sector(double posX,double posY, double width, double height, Supervisor* master, int id);
+        Sector(double posX, double posY, double posZ, double width, double height, Supervisor* master, int id);
         ~Sector();
 
 		void generateAgent();
@@ -55,6 +55,7 @@ class Sector
 		void distroPhase(const EventQueue::eEvent *event);
 		std::list<EventQueue::iEvent> responsePhase();
 		void retrievePopPos(std::list<agentInfo> &infolist);
+        void fieldMovement(std::list<agentInfo> &infolist);
 		int initAmount;
 		void simDone();
 		int getID(){ return id; }
@@ -85,6 +86,8 @@ private:
 		friend class AgentLuaInterface;
 		double posX;
 		double posY;
+        double posZ;
+        double depth;
 		double width;
 		double height;
 		int id;

@@ -71,16 +71,17 @@ public:
 	agentInfo getAgentInfo();
 
 	double getPosZ();
+    double posX, posY, posZ;
+    double shiftX, shiftY, shiftZ;
+    int ID;
 
 protected:
 
 	void distroEEvent(std::unique_ptr<EventQueue::eEvent> event);
 
-    int ID;
     int macroFactorMultiple; //how many macrostep pr. macrostep(if 0 the agent will be ignored completely).
 	std::unordered_set<int> groups;
     std::string desc;
-    double posX, posY, posZ;
     std::vector<double> statusVector;
     Sector* sector;
 	rgba color;
@@ -88,6 +89,8 @@ protected:
     double sRadius;
 	double mass;
 	double charge;
+    double thrust;
+    bool momentum;
 
 
     friend class Sector;

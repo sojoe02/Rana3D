@@ -43,13 +43,10 @@ end
 
 function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
 	
-	--Event.emit{targetID=sourceID, speed=0, description="echo"}
-	--l_debug("Heard a")
-	--l_debug(eventDescription)
-	--if eventDescription=="beep" then
+
+	if eventDescription=="beep" then
 		Event.emit{speed=0,description="echo"}
-	--	l_debug("Echo!")
-	--end
+	end
 
 end
 

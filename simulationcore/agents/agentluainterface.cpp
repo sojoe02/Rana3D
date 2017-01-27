@@ -1,4 +1,4 @@
-
+﻿
 //
 //Copyright 	2013 	Søren Vissing Jørgensen.
 //			2014	Søren Vissing Jørgensen, Center for Bio-Robotics, SDU, MMMI.  
@@ -52,9 +52,10 @@ AgentLuaInterface::AgentLuaInterface(int ID, double posX, double posY, double po
 {
 
     desc = "LUA";
+
     //Output::Inst()->kprintf("%f,%f", posX, posY);
 
-    Output::Inst()->addGraphicAgent(ID, -1,-1,-1,1);
+    Output::Inst()->addGraphicAgent(ID, -1,-1,-1,0.01);
     //Setup up the LUA stack:
     L = luaL_newstate();
     if(L == NULL)
@@ -105,9 +106,9 @@ AgentLuaInterface::AgentLuaInterface(int ID, double posX, double posY, double po
         lua_pushnumber(L, Phys::getEnvX());
         lua_setglobal(L, "ENV_WIDTH");
         lua_pushnumber(L, Phys::getEnvY());
-		lua_setglobal(L, "ENV_HEIGHT");
-		lua_pushnumber(L, Phys::getEnvZ());
-		lua_setglobal(L, "ENV_DEPTH");
+        lua_setglobal(L, "ENV_HEIGHT");
+        lua_pushnumber(L, Phys::getEnvZ());
+        lua_setglobal(L, "ENV_DEPTH");
 
         lua_pushnumber(L, destinationX);
         lua_setglobal(L, "DestinationX");
@@ -120,23 +121,28 @@ AgentLuaInterface::AgentLuaInterface(int ID, double posX, double posY, double po
         lua_pushboolean(L, moving);
         lua_setglobal(L, "Moving");
         lua_pushboolean(L, gridmove);
-		lua_setglobal(L, "GridMove");
+        lua_setglobal(L, "GridMove");
+        lua_pushboolean(L, momentum);
+        lua_setglobal(L,"Momentum");
 
-		lua_pushnumber(L, mass);
-		lua_setglobal(L, "Mass");
-		lua_pushnumber(L, charge);
-		lua_setglobal(L, "Charge");
+        lua_pushnumber(L, mass);
+        lua_setglobal(L, "Mass");
+        lua_pushnumber(L, charge);
+        lua_setglobal(L, "Charge");
         lua_pushnumber(L, sRadius);
-		lua_setglobal(L, "Radius");
+        lua_setglobal(L, "Radius");
+        lua_pushnumber(L, thrust);
+        lua_setglobal(L, "Thrust");
 
-		lua_pushnumber(L, color.red);
-		lua_setglobal(L, "ColorRed");
-		lua_pushnumber(L, color.green);
-		lua_setglobal(L, "ColorGreen");
-		lua_pushnumber(L, color.blue);
-		lua_setglobal(L, "ColorBlue");
-		lua_pushnumber(L, color.alpha);
-		lua_setglobal(L, "ColorAlpha");
+
+        lua_pushnumber(L, color.red);
+        lua_setglobal(L, "ColorRed");
+        lua_pushnumber(L, color.green);
+        lua_setglobal(L, "ColorGreen");
+        lua_pushnumber(L, color.blue);
+        lua_setglobal(L, "ColorBlue");
+        lua_pushnumber(L, color.alpha);
+        lua_setglobal(L, "ColorAlpha");
 
         //lua_newtable(L);
         //lua_setglobal(L, "EventTable");
@@ -235,6 +241,9 @@ AgentLuaInterface::AgentLuaInterface(int ID, double posX, double posY, double po
     moveFactor = Phys::getMacroFactor() * Phys::getTimeRes();
 }
 
+
+
+
 AgentLuaInterface::~AgentLuaInterface()
 {
     if(L != NULL)
@@ -247,6 +256,7 @@ AgentLuaInterface::~AgentLuaInterface()
         //L = NULL;
     }
 }
+
 
 void AgentLuaInterface::InitializeAgent()
 {
@@ -358,6 +368,16 @@ std::unique_ptr<EventQueue::eEvent> AgentLuaInterface::takeStep()
         }
 
         getSyncData();
+        std::vector<double> shift = Interfacer::getShift(ID);
+        posX += shift[0];
+        posY += shift[1];
+        posZ += shift[2];
+        lua_pushnumber(L, posX);
+        lua_setglobal(L, "PositionX");
+        lua_pushnumber(L, posY);
+        lua_setglobal(L, "PositionY");
+        lua_pushnumber(L, posZ);
+        lua_setglobal(L, "PositionZ");
 
         return NULL;
 
@@ -391,12 +411,12 @@ std::unique_ptr<EventQueue::eEvent> AgentLuaInterface::handleEvent(std::unique_p
         lua_getglobal(L,"_HandleEvent");
         lua_pushnumber(L, eventPtr->event->posX);
         lua_pushnumber(L, eventPtr->event->posY);
-		lua_pushnumber(L, eventPtr->event->posZ);
+        lua_pushnumber(L, eventPtr->event->posZ);
         lua_pushnumber(L, eventPtr->event->originID);
         lua_pushstring(L, eventPtr->event->desc.c_str());
         lua_pushstring(L, eventPtr->event->luatable.c_str());
 
-		if(lua_pcall(L,6,0,0)!=LUA_OK)
+        if(lua_pcall(L,6,0,0)!=LUA_OK)
         {
             Output::Inst()->kprintf("<b><font color=\"brown\">Error on event handling.%s, %s</font></b></>",filename.c_str(),lua_tostring(L,-1));
             Output::RunSimulation.store(false);
@@ -415,6 +435,7 @@ std::unique_ptr<EventQueue::eEvent> AgentLuaInterface::handleEvent(std::unique_p
     return NULL;
 }
 
+
 void AgentLuaInterface::movement()
 {
     lua_getglobal(L, "GridMove");
@@ -422,26 +443,50 @@ void AgentLuaInterface::movement()
     //bool collision = false;
 
 
-    if(posX != destinationX || posY != destinationY)
+    if(posX != destinationX || posY != destinationY || posZ != destinationZ)
     {
-        double angle = std::atan2(destinationX-posX, destinationY-posY);
-        double vY = speed * std::cos(angle);
-        double vX = speed * std::sin(angle);
+        double radi = sqrt(pow(destinationX-posX,2)+pow(destinationY-posY,2)+pow(destinationZ-posZ,2));
+        double vX = speed * (destinationX-posX)/radi;
+        double vY = speed * (destinationY-posY)/radi;
+        double vZ = speed * (destinationZ-posZ)/radi;
 
         double newPosX = posX + moveFactor * vX * macroFactorMultiple;
         double newPosY = posY + moveFactor * vY * macroFactorMultiple;
-        double newPosZ = posZ + moveFactor * speed * macroFactorMultiple;
+        double newPosZ = posZ + moveFactor * vZ * macroFactorMultiple;
 
 
-        //Check if the agent overshoots it's target destinations.
+        //Check if the agent overshoots its target destinations.
         if(		(posX >= destinationX && newPosX <= destinationX &&
-                 posY >= destinationY && newPosY <= destinationY) ||
-                (posX <= destinationX && newPosX >= destinationX &&
-                 posY >= destinationY && newPosY <= destinationY) ||
+                 posY >= destinationY && newPosY <= destinationY &&
+                 posZ >= destinationZ && newPosZ <= destinationZ) ||
+
                 (posX >= destinationX && newPosX <= destinationX &&
-                 posY <= destinationY && newPosY >= destinationY) ||
+                 posY >= destinationY && newPosY <= destinationY &&
+                 posZ <= destinationZ && newPosZ >= destinationZ) ||
+
                 (posX <= destinationX && newPosX >= destinationX &&
-                 posY <= destinationY && newPosY >= destinationY)
+                 posY >= destinationY && newPosY <= destinationY &&
+                 posZ >= destinationZ && newPosZ <= destinationZ) ||
+
+                (posX <= destinationX && newPosX >= destinationX &&
+                 posY >= destinationY && newPosY <= destinationY &&
+                 posZ <= destinationZ && newPosZ >= destinationZ) ||
+
+                (posX >= destinationX && newPosX <= destinationX &&
+                 posY <= destinationY && newPosY >= destinationY &&
+                 posZ >= destinationZ && newPosZ <= destinationZ) ||
+
+                (posX >= destinationX && newPosX <= destinationX &&
+                 posY <= destinationY && newPosY >= destinationY &&
+                 posZ <= destinationZ && newPosZ >= destinationZ) ||
+
+                (posX <= destinationX && newPosX >= destinationX &&
+                 posY <= destinationY && newPosY >= destinationY &&
+                 posZ <= destinationZ && newPosZ >= destinationZ) ||
+
+                (posX <= destinationX && newPosX >= destinationX &&
+                 posY <= destinationY && newPosY >= destinationY &&
+                 posZ >= destinationZ && newPosZ <= destinationZ)
                 )
             //if(std::abs(newPosX-DestinationX)std::abs(posX-destinationX))
         {
@@ -477,9 +522,12 @@ void AgentLuaInterface::movement()
         // }
         //else
         //{
+
+
         posX = newPosX;
         posY = newPosY;
         posZ = newPosZ;
+
         lua_pushnumber(L, posX);
         lua_setglobal(L, "PositionX");
         lua_pushnumber(L, posY);
@@ -497,6 +545,8 @@ void AgentLuaInterface::movement()
 
     }
 }
+
+
 /********************************************************
  * post processing.
  *
@@ -583,16 +633,18 @@ void AgentLuaInterface::getSyncData()
 {
     if(removed) return;
     try
-	{
-		lua_getglobal(L, "ColorRed");
-		lua_getglobal(L, "ColorGreen");
-		lua_getglobal(L, "ColorBlue");
-		lua_getglobal(L, "ColorAlpha");
-		lua_getglobal(L, "PositionZ");
+    {
+        lua_getglobal(L, "Momentum");
+        lua_getglobal(L, "Thrust");
+        lua_getglobal(L, "ColorRed");
+        lua_getglobal(L, "ColorGreen");
+        lua_getglobal(L, "ColorBlue");
+        lua_getglobal(L, "ColorAlpha");
+        lua_getglobal(L, "PositionZ");
 
-		lua_getglobal(L, "Mass");
-		lua_getglobal(L, "Charge");
-		lua_getglobal(L, "Radius");
+        lua_getglobal(L, "Mass");
+        lua_getglobal(L, "Charge");
+        lua_getglobal(L, "Radius");
 
         lua_getglobal(L, "GridMove");
         lua_getglobal(L, "StepMultiple");
@@ -601,18 +653,21 @@ void AgentLuaInterface::getSyncData()
         lua_getglobal(L, "DestinationX");
         lua_getglobal(L, "DestinationY");
         lua_getglobal(L, "Speed");
-		lua_getglobal(L, "Moving");
+        lua_getglobal(L, "Moving");
+
+        momentum = lua_toboolean(L,-18);
+        thrust = lua_tonumber(L,-17);
 
         sRadius = lua_tonumber(L, -9);
-		charge = lua_tonumber(L, -10);
-		mass = lua_tonumber(L, -11);
+        charge = lua_tonumber(L, -10);
+        mass = lua_tonumber(L, -11);
 
-		posZ = lua_tonumber(L, -12);
+        posZ = lua_tonumber(L, -12);
 
-		color.alpha = lua_tonumber(L, -13);
-		color.red = lua_tonumber(L, -16);
-		color.green = lua_tonumber(L, -15);
-		color.blue = lua_tonumber(L, -14);
+        color.alpha = lua_tonumber(L, -13);
+        color.red = lua_tonumber(L, -16);
+        color.green = lua_tonumber(L, -15);
+        color.blue = lua_tonumber(L, -14);
 
 
         int stepMultiple = (int)lua_tonumber(L, -7);
@@ -620,6 +675,7 @@ void AgentLuaInterface::getSyncData()
         {
             macroFactorMultiple = stepMultiple;
         }
+
         posX = lua_tonumber(L, -6);
         posY = lua_tonumber(L, -5);
 
@@ -628,6 +684,7 @@ void AgentLuaInterface::getSyncData()
         speed = lua_tonumber(L, -2);
         moving = lua_toboolean(L, -1);
         gridmove = lua_toboolean(L,- 8);
+
 
     }
     catch(std::exception &e)
@@ -903,7 +960,7 @@ int AgentLuaInterface::l_radialMapColorScan(lua_State *L)
 
                 if(r == color.red && g == color.green && b == color.blue)
                 {
- //                   Output::Inst()->kprintf("%i,%i,%i", color.red, color.green, color.blue);
+                    //                   Output::Inst()->kprintf("%i,%i,%i", color.red, color.green, color.blue);
                     count++;
                     index++;
 
@@ -1367,17 +1424,17 @@ int AgentLuaInterface::l_emitEvent(lua_State *L)
     std::unique_ptr<EventQueue::eEvent>
             sendEvent(new EventQueue::eEvent());
 
-	sendEvent->originID = lua_tonumber(L, -9);
-	sendEvent->posX	= lua_tonumber(L, -8);
-	sendEvent->posY = lua_tonumber(L, -7);
-	sendEvent->propagationSpeed = lua_tonumber(L,-6);
+    sendEvent->originID = lua_tonumber(L, -9);
+    sendEvent->posX	= lua_tonumber(L, -8);
+    sendEvent->posY = lua_tonumber(L, -7);
+    sendEvent->propagationSpeed = lua_tonumber(L,-6);
     sendEvent->activationTime = Phys::getCTime()+1;
     sendEvent->id = ID::generateEventID();
-	sendEvent->desc = lua_tostring(L, -5);
-	sendEvent->targetID = lua_tonumber(L, -4);
-	sendEvent->targetGroup = lua_tonumber(L, -3);
-	sendEvent->luatable = lua_tostring(L, -2);
-	sendEvent->posZ = lua_tonumber(L, -1);
+    sendEvent->desc = lua_tostring(L, -5);
+    sendEvent->targetID = lua_tonumber(L, -4);
+    sendEvent->targetGroup = lua_tonumber(L, -3);
+    sendEvent->luatable = lua_tostring(L, -2);
+    sendEvent->posZ = lua_tonumber(L, -1);
 
     Interfacer::submitEEvent(std::move(sendEvent));
 

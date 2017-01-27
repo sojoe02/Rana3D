@@ -70,7 +70,6 @@ function handleEvent(sourceX, sourceY, sourceID, eventDescription, eventTable)
 
 	Displacement = above_count/below_count
 
-	--l_debug("Echo back!")
 
 end
 
@@ -82,10 +81,10 @@ function takeStep()
 	end
 
 	--movement
-	PositionX = PositionX + 10--speed * STEP_RESOLUTION
+	PositionX = PositionX + speed * STEP_RESOLUTION
 
 	if Displacement > 1 and PositionY > 70 then
-		PositionY = PositionY - speed/2 * STEP_RESOLUTION
+		PositionY = PositionY - speed * STEP_RESOLUTION
 	end
 
 		

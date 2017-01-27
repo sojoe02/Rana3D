@@ -58,6 +58,11 @@ struct agentInfo
 	double radius;
 	double mass;
 	double charge;
+    double shiftX;
+    double shiftY;
+    double shiftZ;
+    double thrust;
+    bool momentum;
     //std::string filename;
 
 };
@@ -65,8 +70,9 @@ struct agentInfo
 
 struct agentTmu
 {
-    int x;
-    int y;
+    double x;
+    double y;
+    double z;
     int id;
 	unsigned long long tmu;
 };

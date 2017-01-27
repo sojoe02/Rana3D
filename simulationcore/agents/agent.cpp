@@ -29,9 +29,8 @@
 
     Agent::Agent(int ID, double posX, double posY, double posZ, Sector *sector)
 :ID(ID), macroFactorMultiple(1), posX(posX), posY(posY), posZ(posZ), sector(sector),
-      sRadius(0), mass(0), charge(0)
+      sRadius(0), mass(0), charge(0),momentum(true),thrust(0)
 {
-
 }
 
 int Agent::getID(){

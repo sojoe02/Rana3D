@@ -20,7 +20,6 @@ SOURCES += main.cpp\
     output.cpp \
     control.cpp \
     graphics/agentItem.cpp \
-    graphics/sphereitem.cpp \
     graphics/glwidget.cpp \
     runner.cpp \
     postprocessing/eventprocessing.cpp \
@@ -43,7 +42,8 @@ SOURCES += main.cpp\
     simulationcore/supervisor.cpp \
     simulationcore/agents/agent.cpp \
     simulationcore/agents/agentluainterface.cpp \
-    simulationcore/eventqueue.cpp
+    simulationcore/eventqueue.cpp \
+    api/fieldphys.cpp
 
 HEADERS  += mainwindow.h \
     ID.h \
@@ -51,7 +51,6 @@ HEADERS  += mainwindow.h \
     output.h \
     control.h \
     graphics/agentItem.h \
-    graphics/sphereitem.h \
     graphics/glwidget.h \
     runner.h \
     postprocessing/eventprocessing.h \
@@ -74,7 +73,8 @@ HEADERS  += mainwindow.h \
     simulationcore/supervisor.h \
     simulationcore/agents/agent.h \
     simulationcore/agents/agentluainterface.h \
-    simulationcore/eventqueue.h
+    simulationcore/eventqueue.h \
+    api/fieldphys.h
 
 FORMS    += mainwindow.ui \
 	eventdialog.ui \

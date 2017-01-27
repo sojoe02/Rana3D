@@ -6,7 +6,7 @@
 #include <GL/glu.h>
 #include <GL/gl.h>
 #include <QMatrix4x4>
-#include "sphereitem.h"
+#include "utility.h"
 
 class GLWidget : public QOpenGLWidget
 {
@@ -14,7 +14,7 @@ public:
     GLWidget(QWidget *parent = 0);
     ~GLWidget();
     void paintGL();
-    std::map<int,sphereItem> spheres;
+    std::map<int,agentInfo> spheres;
     void resizeGL(int w, int h);
     double zoom;
 

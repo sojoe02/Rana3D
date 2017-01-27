@@ -35,6 +35,7 @@
 #include "ui_mainwindow.h"
 #include "api/maphandler.h"
 #include "api/phys.h"
+#include "api/fieldphys.h"
 #include "api/gridmovement.h"
 #include "output.h"
 #include "simulationcore/eventqueue.h"
@@ -145,6 +146,8 @@ MainWindow::~MainWindow()
 void MainWindow::on_generateButton_clicked()
 {
 
+    memory::lastPositions->clear();
+    memory::momentum->clear();
     qApp->processEvents();
     if (Output::Inst()->SimRunning.load())
     {
@@ -166,7 +169,7 @@ void MainWindow::on_generateButton_clicked()
 //	ui->graphicsView->viewport()->update();
     ui->openGLWidget->GLWidget::update();
 
-    graphAgents.clear();
+    //graphAgents.clear();
     GridMovement::clearGrid();
     if(mapItem == NULL)
     {
@@ -401,37 +404,27 @@ void MainWindow::updateMap(std::list<agentInfo> infolist)
  */
 void MainWindow::on_updateMap(INFOLIST infolist)
 {
-    //Output::Inst()->kprintf("updating map fired...");
-
-    //mapItem->setPixmap(QPixmap::fromImage(*mapImage));
-    //mapItem->setZValue(1);
-
-    //INFOLIST::iterator itr;
 
     for(auto itr = infolist.begin(); itr != infolist.end(); itr++)
     {
-        double x = itr->x/Phys::getScale();
-        double y = itr->y/Phys::getScale();
-        double z = itr->z/Phys::getScale();
-        double rad = itr->radius/Phys::getScale();
-		int Id = itr->id;
+        agentInfo sItem;
 
-        std::map<int,sphereItem>::iterator it = graphAgents.find(Id);
-        sphereItem sItem;
-        if(it != graphAgents.end())
-        {
-            addGraphicAgent(Id,x,y,z,rad);
-        } else
-        {
-            sItem.xPos=x/100;
-            sItem.yPos=y/100;
-            sItem.zPos=z/100;
-            sItem.radius=rad;
+        sItem.x = itr->x/(100*Phys::getScale());
+        sItem.y = itr->y/(100*Phys::getScale());
+        sItem.z = itr->z/(100*Phys::getScale());
+        sItem.radius = itr->radius/(100*Phys::getScale());
+        sItem.color = itr->color;
+        sItem.id = itr->id;
 
-            ui->openGLWidget->GLWidget::spheres[Id]=sItem;
-            graphAgents[Id]=sItem;
+
+        std::map<int,agentInfo>::iterator it = ui->openGLWidget->GLWidget::spheres.find(sItem.id);
+        if(it != ui->openGLWidget->GLWidget::spheres.end())
+        {
+            addGraphicAgent(sItem.id,sItem.x,sItem.y,sItem.z,sItem.radius);
+        }else{
+            ui->openGLWidget->GLWidget::spheres[sItem.id]=sItem;
         }
-	}
+    }
 
     ui->openGLWidget->GLWidget::update();
 
@@ -447,30 +440,29 @@ void MainWindow::on_updateMap(INFOLIST infolist)
  * @see MainWindow::on_addGraphicAgent()
  */
 
-void MainWindow::addGraphicAgent(int id, double posX, double posY, double posZ, double radius)
+void MainWindow::addGraphicAgent(int Id, double posX, double posY, double posZ, double radius)
 {
-    emit addGraphicAgentSignal(id, posX, posY, posZ, radius);
+    emit addGraphicAgentSignal(Id, posX, posY, posZ, radius);
 }
 
-void MainWindow::on_addGraphicAgent(int id, double posX, double posY, double posZ, double radius)
+void MainWindow::on_addGraphicAgent(int Id, double posX, double posY, double posZ, double radius)
 {
 
     //itializeTimer->start(500);
-    sphereItem gfxItem;
-    gfxItem.xPos=posX/100;
-    gfxItem.yPos=posY/100;
-    gfxItem.zPos=posZ/100;
-    gfxItem.radius=radius;
+    agentInfo sItem;
 
-    auto itr = graphAgents.find(id);
-    if(itr != graphAgents.end())
+    sItem.x = posX/(100*Phys::getScale());
+    sItem.y = posY/(100*Phys::getScale());
+    sItem.z = posZ/(100*Phys::getScale());
+    sItem.radius = radius/(100*Phys::getScale());
+
+    auto itr = ui->openGLWidget->GLWidget::spheres.find(Id);
+    if(itr != ui->openGLWidget->GLWidget::spheres.end())
     {
-        graphAgents.erase(id);
-        ui->openGLWidget->GLWidget::spheres.erase(id);
+        ui->openGLWidget->GLWidget::spheres.erase(Id);
     }
 
-    graphAgents.insert(std::make_pair(id, gfxItem));
-    ui->openGLWidget->GLWidget::spheres.insert(std::make_pair(id, gfxItem));
+    ui->openGLWidget->GLWidget::spheres.insert(std::make_pair(Id, sItem));
 
 }
 
@@ -482,15 +474,17 @@ void MainWindow::changeGraphicAgentColor(int id, int r, int g, int b, int alpha)
 
 void MainWindow::on_changeGraphicAgentColor(int id, int r, int g, int b, int alpha)
 {
-    std::map<int,sphereItem>::iterator it = graphAgents.find(id);
-    sphereItem sItem;
+    std::map<int,agentInfo>::iterator it = ui->openGLWidget->GLWidget::spheres.find(id);
+    agentInfo sItem; // = ui->openGLWidget->GLWidget::spheres.find(id);
         sItem = it->second;
-        sItem.red=r;
-        sItem.green=g;
-        sItem.blue=b;
+        sItem.color.red = r;
+        sItem.color.green=g;
+        sItem.color.blue=b;
 
         ui->openGLWidget->GLWidget::spheres[id]=sItem;
-        graphAgents[id]=sItem;
+
+        std::cout<<"Changing colours to "<<sItem.color.red<<", "<<sItem.color.green<<", "<<sItem.color.blue<<std::endl;
+        std::cout<<"So item is "<<ui->openGLWidget->GLWidget::spheres.find(id)->second.color.red<<std::endl;
 }
 
 void MainWindow::enableRunButton(bool enabled)
@@ -519,10 +513,10 @@ void MainWindow::removeGraphicAgent(int id)
 
 void MainWindow::on_removeGraphicAgent(int id)
 {
-	auto iter = graphAgents.find(id);
-	if(iter != graphAgents.end())
+    auto iter = ui->openGLWidget->GLWidget::spheres.find(id);
+    if(iter != ui->openGLWidget->GLWidget::spheres.end())
 	{
-        graphAgents.erase(id);
+        //graphAgents.erase(id);
         ui->openGLWidget->GLWidget::spheres.erase(id);
     }
 }
@@ -541,7 +535,7 @@ void MainWindow::on_runTimerTimeout()
 
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
-    /*double scale = .50;
+    double scale = .50;
 
     if(event->delta() > 0)
     {
@@ -555,7 +549,7 @@ void MainWindow::wheelEvent(QWheelEvent* event)
         ui->openGLWidget->GLWidget::zoom=-scale;
         ui->openGLWidget->GLWidget::update();
     }
-*/
+
 //    ui->zoomSlider->setValue(std::abs(100*transform.m11()));
 //    ui->zoomLabel->setText(QString::number(std::abs(100*transform.m11())));
 
@@ -926,6 +920,7 @@ void MainWindow::setupVisualTab(QHash<QString, ZBlock *> *argZBlocks)
             agentInfo agentinfo;
             agentinfo.x = agenttmu.x;
             agentinfo.y = agenttmu.y;
+            agentinfo.z = agenttmu.z;
             agentinfo.id = agenttmu.id;
 
             auto itr = agentpositionMap.find(double(agenttmu.tmu)/siminfo->timeResolution);

@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <mutex>
+#include <vector>
 
 #include "agents/agent.h"
 #include "supervisor.h"
@@ -21,8 +22,9 @@ public:
 	static void addLuaAgentPtr(std::shared_ptr<AgentLuaInterface> luaPtr);
 	static std::shared_ptr<AgentLuaInterface> getAgentPtr(int id);
 	static void submitEEvent(std::unique_ptr<EventQueue::eEvent> eEvent);
+    static void modifyAgentInfo(std::list<agentInfo> infolist);
+    static std::vector<double> getShift(int id);
 
-	void modifyAgentInfo(std::vector<agentInfo> infolist);
 private:
 
     static Supervisor *master;

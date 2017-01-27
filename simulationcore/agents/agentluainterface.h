@@ -118,6 +118,9 @@ public:
 	static int l_changeAgentColor(lua_State *L);
 
     void InitializeAgent();
+    double shiftX, shiftY, shiftZ;
+    double thrust;
+    bool momentum;
 
    private:
 
@@ -137,12 +140,13 @@ public:
     bool moving;
     bool gridmove;
 
+
     void setRemoved();
     void simDone();
     double eventChance();
 
     std::string filename;
-    //The LUA state:
+    //The LUA state:F
     friend class Sector;
     friend class Supervisor;
     bool nofile;
@@ -151,6 +155,7 @@ public:
 
     double moveFactor;
     void getSyncData();
+
 };
 
 #endif // AUTONLUAINTERFACE_H

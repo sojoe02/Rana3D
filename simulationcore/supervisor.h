@@ -66,6 +66,7 @@ public:
 	void printStatus();
 
 	std::list<agentInfo> retrievePopPos();
+    std::list<agentInfo> fieldMovement();
 
 	void saveExternalEvents(std::string filename);
 

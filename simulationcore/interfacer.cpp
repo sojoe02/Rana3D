@@ -70,15 +70,32 @@ std::shared_ptr<AgentLuaInterface> Interfacer::getAgentPtr(int id)
 	} else return NULL;
 }
 
-void Interfacer::modifyAgentInfo(std::vector<agentInfo> infolist)
+void Interfacer::modifyAgentInfo(std::list<agentInfo> infolist)
 {
 	for(agentInfo &info : infolist)
 	{
-		auto &agent = agents[info.id];
+        auto agent = agents.find(info.id);
 
-		agent->setPositions(2,3,8);
-
+        if (agent!=agents.end()){
+        agent->second->posX=info.x;
+        agent->second->posY=info.y;
+        agent->second->posZ=info.z;
+        agent->second->shiftX=info.shiftX;
+        agent->second->shiftY=info.shiftY;
+        agent->second->shiftZ=info.shiftZ;
+        }else{
+            std::cout<<"Error: Planet not found."<<std::endl;
+        }
 	}
+}
+
+std::vector<double> Interfacer::getShift(int id){
+    auto &agent = agents[id];
+    std::vector<double> oneShift;
+    oneShift.push_back(agent->shiftX);
+    oneShift.push_back(agent->shiftY);
+    oneShift.push_back(agent->shiftZ);
+return oneShift;
 }
 
 

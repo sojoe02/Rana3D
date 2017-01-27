@@ -43,7 +43,7 @@ public:
 
     void progressBar(unsigned long long current, unsigned long long maximum);
 
-    void updatePosition(int id, double x, double y);
+    void updatePosition(int id, double x, double y, double z);
 
     void setMainWindow(MainWindow *mainwindow);
 

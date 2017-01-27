@@ -1,5 +1,5 @@
 #include "glwidget.h"
-#include "sphereitem.h"
+#include "utility.h"
 #include <GL/glut.h>
 #include <QMouseEvent>
 #include <iostream>
@@ -8,32 +8,36 @@ void myBalls(GLdouble size, GLfloat dispX, GLfloat dispY,GLfloat dispZ,float R,f
     float currentColor[3];
     glGetFloatv(GL_CURRENT_COLOR,currentColor);
     glColor3f(R/255, G/255, B/255);
-    glTranslatef(dispX,dispZ,dispY);
+    glTranslatef(dispX,dispY, dispZ); //orig xzy
     glutWireSphere(size,15,15);
     glColor3f(currentColor[0],currentColor[1],currentColor[2]);
-    glTranslatef(-dispX,-dispZ,-dispY);
+    glTranslatef(-dispX,-dispY,-dispZ);
 }
 
 void GLWidget::drawAgents(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
-    sphereItem current;
-    for (int i=0; i<spheres.size();i++){
-        current = spheres[i];
-        if(current.xPos>10||current.yPos>10||current.zPos>10){
-            myBalls(0,0,0,0,0,0,0);
-        }else{
-            if (current.red>255 || current.red<0){
-                current.red = 255;
-            }
-            if (current.green>255 || current.green<0){
-                current.green = 255;
-            }
-            if (current.blue>255 || current.blue<0){
-                current.blue = 255;
-            }
-            myBalls(0.1,current.xPos,current.yPos,current.zPos,255,255,255);
-        }
+    for(const auto &current : spheres)
+    {
+        myBalls(0,0,0,0,0,0,0);
+        float red,green,blue;
+        //if (current.second.color.red>255 || (current.second.color.red<1&&current.second.color.red!=0)){
+        //    red = 255;
+        //}else{
+            red=current.second.color.red;
+        //}
+        //if (current.second.color.green>255 || (current.second.color.green<1&&current.second.color.green!=0)){
+        //    green = 255;
+        //}else{
+            green=current.second.color.green;
+        //}
+        //if (current.second.color.blue>255 || (current.second.color.blue<1&&current.second.color.blue!=0)){
+        //    blue = 255;
+        //}else{
+            blue=current.second.color.blue;
+        //}
+        myBalls(current.second.radius,current.second.x,current.second.y,current.second.z,red,green,blue);
+        //std::cout<<"Colour is "<<current.second.color.red<<", "<<current.second.color.green<<", "<<current.second.color.blue<<"   with radius "<<current.second.radius<<std::endl;
     }
 
     glPopMatrix();
